@@ -8,6 +8,7 @@ import selectItem from './selectItem';
 import itemPosition from './itemPosition';
 import showLoader from './showLoader';
 import setMessage from './setMessage';
+import setNotice from './setNotice';
 
 export default combineReducers({
 	list,
@@ -17,5 +18,6 @@ export default combineReducers({
 	selectItem,
 	itemPosition,
 	showLoader,
-	setMessage
+	setMessage,
+	setNotice
 });

@@ -3,13 +3,14 @@ import { connect } from 'react-redux';
 
 import { getList } from './actions/getList';
 
+import './autocomplete.css';
+
 
 //
-const App = ({list, findItems, showList, findText, selectItem, itemPosition, onGetList, onToggleList, onFindItem, onSelectItem, showLoader, setPositionItem, message, setMessage}) => {
+const AutoComplete = ({list, findItems, showList, findText, selectItem, itemPosition, onGetList, onToggleList, onFindItem, onSelectItem, showLoader, setPositionItem, message, setMessage, notice, setNotice}) => {
 	let textInput, newItemPosition = itemPosition;
 
 	const changeInput = () => {
-
 		if (list.length === 0) {
 			onGetList()
 		}
@@ -26,6 +27,18 @@ const App = ({list, findItems, showList, findText, selectItem, itemPosition, onG
 
 	const keyUpHandle = (e) => {
 		(findItems.length === 0) ? setMessage('Не найдено') : setMessage('');
+	}
+
+	const onBlurhandle = () => {
+		if (findItems.length !== 0) {
+			onSelectItem(findItems[0].Id);
+			onFindItem(findItems[0].City);
+		} else {
+			setMessage('')
+			setNotice('Выберите значание из списка')
+		}
+
+		onToggleList(false);
 	}
 
 	const keyDownHandle = (e) => {
@@ -63,15 +76,21 @@ const App = ({list, findItems, showList, findText, selectItem, itemPosition, onG
 				<input className="autocomplete__input"
 					type="text" 
 					placeholder="Начните вводить название" 
+					value={findText}
 					ref={(input) => textInput = input}
 					onChange={changeInput} 
 					onKeyDown={keyDownHandle}
 					onKeyUp={keyUpHandle}
-					value={findText}
+					onBlur={onBlurhandle}
+					onFocus={() => setNotice('')}
 				/>
 
 				{(message !== '') ? (
 					<div className="autocomplete__message">{message}</div>
+				) : ''}
+
+				{(notice !== '') ? (
+					<div className="autocomplete__notice">{notice}</div>
 				) : ''}
 
 				{(findItems.length !== 0) ? (
@@ -82,8 +101,7 @@ const App = ({list, findItems, showList, findText, selectItem, itemPosition, onG
 							<li 
 								key={item.Id} 
 								className={(item.Id === selectItem) ? 'autocomplete__item _active' : 'autocomplete__item'}
-								onBlur={() => onToggleList(false)}
-								onClick={function() {
+								onMouseDown={function() {
 									onSelectItem(item.Id);
 									onFindItem(item.City);
 									onToggleList(false);
@@ -99,7 +117,6 @@ const App = ({list, findItems, showList, findText, selectItem, itemPosition, onG
 }
 
 
-
 //
 function mapStateToProps(state) {
 	return {
@@ -110,7 +127,8 @@ function mapStateToProps(state) {
 		selectItem: state.selectItem,
 		itemPosition: state.itemPosition,
 		showLoader: state.showLoader,
-		message: state.setMessage
+		message: state.setMessage,
+		notice: state.setNotice
 	}
 }
 
@@ -149,7 +167,13 @@ function matchDispatchtoProps(dispatch) {
 				payload: message
 			})
 		},
+		setNotice: (notice) => {
+			dispatch({
+				type: 'SHOW_NOTICE',
+				payload: notice
+			})
+		},
 	}
 }
 
-export default connect(mapStateToProps, matchDispatchtoProps)(App);
+export default connect(mapStateToProps, matchDispatchtoProps)(AutoComplete);
