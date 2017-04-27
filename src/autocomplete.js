@@ -1,16 +1,31 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
 
 import { getList } from './actions/getList';
+import { findText } from './actions/findText';
+import { findList } from './actions/findList';
+import { selectItem } from './actions/selectItem';
+import { toggleList } from './actions/toggleList';
+import { setMessage } from './actions/setMessage';
+import { setNotice } from './actions/setNotice';
+import { setPositionItem } from './actions/setPositionItem';
+
+import { findItemsHandle } from './selectors/selectors';
+
+import Input from './components/input';
+import List from './components/list';
+import Notice from './components/notice';
+import Message from './components/message';
 
 import './autocomplete.css';
 
 
 //
-const AutoComplete = ({list, findItems, showList, findText, selectItem, itemPosition, onGetList, onToggleList, onFindItem, onSelectItem, showLoader, setPositionItem, message, setMessage, notice, setNotice}) => {
-	let textInput, newItemPosition = itemPosition;
+const AutoComplete = ({list, findItems, showList, findText, selectItem, itemPosition, onGetList, onToggleList, onFindText, onFindList, onSelectItem, showLoader, setPositionItem, message, setMessage, notice, setNotice}) => {
+	let newItemPosition = itemPosition;
 
-	const changeInput = () => {
+	const changeInput = (item) => {
 		if (list.length === 0) {
 			onGetList()
 		}
@@ -21,7 +36,11 @@ const AutoComplete = ({list, findItems, showList, findText, selectItem, itemPosi
 			onSelectItem(findItems[newItemPosition].Id)
 		};
 
-		onFindItem(textInput.value);
+		onFindText(item.target.value);
+
+		let findList = findItemsHandle(list, item.target.value);
+
+		onFindList(findList);
 		onToggleList(true);
 	}
 
@@ -29,10 +48,10 @@ const AutoComplete = ({list, findItems, showList, findText, selectItem, itemPosi
 		(findItems.length === 0) ? setMessage('Не найдено') : setMessage('');
 	}
 
-	const onBlurhandle = () => {
+	const blurHandle = () => {
 		if (findItems.length !== 0) {
 			onSelectItem(findItems[0].Id);
-			onFindItem(findItems[0].City);
+			onFindText(findItems[0].City);
 		} else {
 			setMessage('')
 			setNotice('Выберите значание из списка')
@@ -48,10 +67,10 @@ const AutoComplete = ({list, findItems, showList, findText, selectItem, itemPosi
 			newItemPosition = itemPosition - 1;
 		} else if (e.key === 'Escape') {
 			onToggleList(false);
-		} else if (e.key === 'Enter') {
-			onSelectItem(findItems[itemPosition].Id);
-			onFindItem(findItems[itemPosition].City);
-			onToggleList(false);
+		} else if (e.key === 'Enter' && findItems.length > 0) {
+				onSelectItem(findItems[itemPosition].Id);
+				onFindText(findItems[itemPosition].City);
+				onToggleList(false);
 		}
 
 		if (newItemPosition < 0) {
@@ -71,46 +90,39 @@ const AutoComplete = ({list, findItems, showList, findText, selectItem, itemPosi
 
 	return (
 			<div 
-				className={(showLoader) ? 'autocomplete _loading' : 'autocomplete'}
+				className={(showLoader) ? 'autocomplete' : 'autocomplete'}
 			>
-				<input className="autocomplete__input"
-					type="text" 
-					placeholder="Начните вводить название" 
-					value={findText}
-					ref={(input) => textInput = input}
-					onChange={changeInput} 
-					onKeyDown={keyDownHandle}
-					onKeyUp={keyUpHandle}
-					onBlur={onBlurhandle}
-					onFocus={() => setNotice('')}
+
+				{(showLoader) ? (
+					<div className="autocomplete__loader" />
+				) : ''}
+
+				<Input 
+					findText={findText}
+					changeInput={changeInput}
+					keyUpHandle={keyUpHandle}
+					blurHandle={blurHandle}
+					keyDownHandle={keyDownHandle}
+					setNotice={setNotice} 
 				/>
 
 				{(message !== '') ? (
-					<div className="autocomplete__message">{message}</div>
+					<Message message={message} />
 				) : ''}
 
 				{(notice !== '') ? (
-					<div className="autocomplete__notice">{notice}</div>
+					<Notice notice={notice} />
 				) : ''}
 
 				{(findItems.length !== 0) ? (
-					<ul 
-						className={(showList) ? 'autocomplete__list _active' : 'autocomplete__list'}
-					>
-						{findItems.map((item) => (
-							<li 
-								key={item.Id} 
-								className={(item.Id === selectItem) ? 'autocomplete__item _active' : 'autocomplete__item'}
-								onMouseDown={function() {
-									onSelectItem(item.Id);
-									onFindItem(item.City);
-									onToggleList(false);
-								}}
-							>
-							{item.City}
-							</li>
-						))}
-					</ul>
+					<List 
+						findItems={findItems}
+						showList={showList}
+						selectItem={selectItem}
+						onSelectItem={onSelectItem}
+						onFindText={onFindText}
+						onToggleList={onToggleList}
+					/>
 				) : ''}
 			</div>
 	)
@@ -121,7 +133,7 @@ const AutoComplete = ({list, findItems, showList, findText, selectItem, itemPosi
 function mapStateToProps(state) {
 	return {
 		list: state.list,
-		findItems: state.list.filter((item) => item.City.toLowerCase().includes(state.findText.toLowerCase())),
+		findItems: state.findList,
 		findText: state.findText,
 		showList: state.showList,
 		selectItem: state.selectItem,
@@ -133,47 +145,16 @@ function mapStateToProps(state) {
 }
 
 function matchDispatchtoProps(dispatch) {
-	return {
-		onGetList: () => {
-			dispatch(getList());
-		},
-		onToggleList: (position) => {
-			dispatch({
-				type: 'TOGGLE_LIST',
-				payload: position
-			})
-		},
-		onFindItem: (text) => {
-			dispatch({
-				type: 'FIND_ITEM',
-				payload: text
-			})
-		},
-		onSelectItem: (id) => {
-			dispatch({
-				type: 'SELECT_ITEM',
-				payload: id
-			})
-		},
-		setPositionItem: (position) => {
-			dispatch({
-				type: 'SET_POSITION',
-				payload: position
-			})
-		},
-		setMessage: (message) => {
-			dispatch({
-				type: 'SHOW_MESSAGE',
-				payload: message
-			})
-		},
-		setNotice: (notice) => {
-			dispatch({
-				type: 'SHOW_NOTICE',
-				payload: notice
-			})
-		},
-	}
+	return bindActionCreators({
+		onGetList: getList,
+		onFindText: findText,
+		onFindList: findList,
+		onSelectItem: selectItem,
+		onToggleList: toggleList,
+		setMessage: setMessage,
+		setNotice: setNotice,
+		setPositionItem: setPositionItem,
+	}, dispatch)
 }
 
 export default connect(mapStateToProps, matchDispatchtoProps)(AutoComplete);

@@ -1,10 +1,10 @@
 export const getList = () => {
 	return dispatch => {
-		let xhr = new XMLHttpRequest(), list, timer;
+		const xhr = new XMLHttpRequest();
 		xhr.open('GET', 'kladr.json', false);
 		xhr.send();
 
-		timer = setTimeout(function() {
+		const timer = setTimeout(function() {
 			dispatch({
 				type: 'SHOW_LOADER',
 				payload: true
@@ -14,7 +14,7 @@ export const getList = () => {
 		if (xhr.status !== 200) {
 			console.log( xhr.status + ': ' + xhr.statusText ); 
 		} else {
-			list = JSON.parse(xhr.responseText); 
+			const list = JSON.parse(xhr.responseText); 
 
 			list.sort(function(a, b) {
 				if (a.name > b.name) return 1;
