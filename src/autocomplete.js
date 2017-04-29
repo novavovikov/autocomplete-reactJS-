@@ -27,7 +27,7 @@ class AutoComplete extends Component {
 	}
 
 
-	changeInput(item) {
+	changeInput = (item) => {
 		if (this.props.list.length === 0) {
 			this.props.onGetList()
 		}
@@ -40,9 +40,9 @@ class AutoComplete extends Component {
 		this.props.onToggleList(true);
 	}
 
-	keyUpHandle(e) {
+	keyUpHandle = (e) => {
 		if (this.props.findItems.length === 0) {
-			setMessage('Не найдено');
+			this.props.setMessage('Не найдено');
 		} else {
 			if (e.key === 'ArrowDown') {
 				this.itemPosition++;
@@ -65,16 +65,22 @@ class AutoComplete extends Component {
 		}
 	}
 
-	blurHandle() {
-		if (this.props.findItems.length !== 0) {
+	blurHandle = () => {
+		if (this.props.findItems.length > 0 && this.props.showList) {
 			this.props.onSelectItem(this.props.findItems[0].Id);
 			this.props.onFindText(this.props.findItems[0].City);
 		} else {
-			setMessage('')
-			setNotice('Выберите значание из списка')
+			this.props.setMessage('')
+			this.props.setNotice('Выберите значание из списка')
 		}
 
 		this.props.onToggleList(false);
+	}
+
+	mouseDownHandle = (id, city, toggle) => {
+		this.props.onSelectItem(id);
+		this.props.onFindText(city);
+		this.props.onToggleList(toggle);
 	}
 
 	render() {
@@ -86,9 +92,9 @@ class AutoComplete extends Component {
 
 				<Input 
 					findText={this.props.findText}
-					changeInput={this.changeInput.bind(this)}
-					keyUpHandle={this.keyUpHandle.bind(this)}
-					blurHandle={this.blurHandle.bind(this)}
+					changeInput={this.changeInput}
+					keyUpHandle={this.keyUpHandle}
+					blurHandle={this.blurHandle}
 					setNotice={this.props.setNotice} 
 				/>
 
@@ -105,9 +111,7 @@ class AutoComplete extends Component {
 						findItems={this.props.findItems}
 						showList={this.props.showList}
 						selectItem={this.props.selectItem}
-						onSelectItem={this.props.onSelectItem}
-						onFindText={this.props.onFindText}
-						onToggleList={this.props.onToggleList}
+						mouseDownHandle={this.mouseDownHandle}
 					/>
 				) : ''}
 			</div>
