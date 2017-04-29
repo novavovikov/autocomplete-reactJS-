@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
@@ -9,102 +9,111 @@ import { selectItem } from './actions/selectItem';
 import { toggleList } from './actions/toggleList';
 import { setMessage } from './actions/setMessage';
 import { setNotice } from './actions/setNotice';
-import { setPositionItem } from './actions/setPositionItem';
 
 import { findItemsHandle } from './selectors/selectors';
 
-import Wrap from './components';
+import Input from './components/input';
+import List from './components/list';
+import Notice from './components/notice';
+import Message from './components/message';
 
 import './autocomplete.css';
 
-//
-const AutoComplete = ({list, findItems, showList, findText, selectItem, itemPosition, onGetList, onToggleList, onFindText, onFindList, onSelectItem, showLoader, setPositionItem, message, setMessage, notice, setNotice}) => {
-	let newItemPosition = itemPosition;
 
-	const changeInput = (item) => {
-		if (list.length === 0) {
-			onGetList()
+class AutoComplete extends Component {
+	constructor(props) {
+	  super(props);
+	  this.itemPosition = 0;
+	}
+
+
+	changeInput(item) {
+		if (this.props.list.length === 0) {
+			this.props.onGetList()
 		}
 
-		newItemPosition = 0;
+		this.props.onFindText(item.target.value);
 
-		if (findItems.length > 0) {
-			onSelectItem(findItems[newItemPosition].Id)
-		};
+		let findList = findItemsHandle(this.props.list, item.target.value);
 
-		onFindText(item.target.value);
-
-		let findList = findItemsHandle(list, item.target.value);
-
-		onFindList(findList);
-		onToggleList(true);
+		this.props.onFindList(findList);
+		this.props.onToggleList(true);
 	}
 
-	const keyUpHandle = (e) => {
-		(findItems.length === 0) ? setMessage('Не найдено') : setMessage('');
+	keyUpHandle(e) {
+		if (this.props.findItems.length === 0) {
+			setMessage('Не найдено');
+		} else {
+			if (e.key === 'ArrowDown') {
+				this.itemPosition++;
+			} else if (e.key === 'ArrowUp') {
+				this.itemPosition--;
+			} else if (e.key === 'Escape') {
+				this.props.onToggleList(false);
+			} else if (e.key === 'Enter') {
+				this.props.onFindText(this.props.findItems[this.itemPosition].City);
+				this.props.onToggleList(false);
+			}
+
+			if (this.itemPosition < 0) {
+				this.itemPosition = 0;
+			} else if (this.itemPosition > this.props.findItems.length - 1) {
+				this.itemPosition = this.props.findItems.length - 1;
+			}
+
+			this.props.onSelectItem(this.props.findItems[this.itemPosition].Id);
+		}
 	}
 
-	const blurHandle = () => {
-		if (findItems.length !== 0) {
-			onSelectItem(findItems[0].Id);
-			onFindText(findItems[0].City);
+	blurHandle() {
+		if (this.props.findItems.length !== 0) {
+			this.props.onSelectItem(this.props.findItems[0].Id);
+			this.props.onFindText(this.props.findItems[0].City);
 		} else {
 			setMessage('')
 			setNotice('Выберите значание из списка')
 		}
 
-		onToggleList(false);
+		this.props.onToggleList(false);
 	}
 
-	const keyDownHandle = (e) => {
-		if (e.key === 'ArrowDown') {
-			newItemPosition = itemPosition + 1;
-		} else if (e.key === 'ArrowUp') {
-			newItemPosition = itemPosition - 1;
-		} else if (e.key === 'Escape') {
-			onToggleList(false);
-		} else if (e.key === 'Enter' && findItems.length > 0) {
-			onSelectItem(findItems[itemPosition].Id);
-			onFindText(findItems[itemPosition].City);
-			onToggleList(false);
-		}
+	render() {
+		return (
+			<div className='autocomplete'>
+				{(this.props.showLoader) ? (
+					<div className="autocomplete__loader" />
+				) : ''}
 
-		if (newItemPosition < 0) {
-			setPositionItem(0);
-			newItemPosition = 0;
-		} else if (newItemPosition > findItems.length - 1) {
-			setPositionItem(findItems.length - 1);
-			newItemPosition = findItems.length - 1;
-		} else {
-			setPositionItem(newItemPosition);
-		}
+				<Input 
+					findText={this.props.findText}
+					changeInput={this.changeInput.bind(this)}
+					keyUpHandle={this.keyUpHandle.bind(this)}
+					blurHandle={this.blurHandle.bind(this)}
+					setNotice={this.props.setNotice} 
+				/>
 
-		if (findItems.length > 0 && showList === true) {
-			onSelectItem(findItems[newItemPosition].Id)
-		};
+				{(this.props.message !== '') ? (
+					<Message message={this.props.message} />
+				) : ''}
+
+				{(this.props.notice !== '') ? (
+					<Notice notice={this.props.notice} />
+				) : ''}
+
+				{(this.props.findItems.length !== 0) ? (
+					<List 
+						findItems={this.props.findItems}
+						showList={this.props.showList}
+						selectItem={this.props.selectItem}
+						onSelectItem={this.props.onSelectItem}
+						onFindText={this.props.onFindText}
+						onToggleList={this.props.onToggleList}
+					/>
+				) : ''}
+			</div>
+		)
 	}
-
-	return (
-		<Wrap 
-			showLoader={showLoader}
-			findText={findText}
-			changeInput={changeInput}
-			keyUpHandle={keyUpHandle}
-			blurHandle={blurHandle}
-			keyDownHandle={keyDownHandle}
-			setNotice={setNotice}
-			message={message}
-			notice={notice}
-			findItems={findItems}
-			showList={showList}
-			selectItem={selectItem}
-			onSelectItem={onSelectItem}
-			onFindText={onFindText}
-			onToggleList={onToggleList}
-		/>
-	)
 }
-
 
 //
 function mapStateToProps(state) {
@@ -114,7 +123,6 @@ function mapStateToProps(state) {
 		findText: state.findText,
 		showList: state.showList,
 		selectItem: state.selectItem,
-		itemPosition: state.itemPosition,
 		showLoader: state.showLoader,
 		message: state.setMessage,
 		notice: state.setNotice
@@ -130,7 +138,6 @@ function matchDispatchtoProps(dispatch) {
 		onToggleList: toggleList,
 		setMessage: setMessage,
 		setNotice: setNotice,
-		setPositionItem: setPositionItem,
 	}, dispatch)
 }
 
