@@ -43,6 +43,8 @@ class AutoComplete extends Component {
 		if (this.props.findItems.length === 0) {
 			this.props.setMessage('Не найдено');
 		} else {
+			this.props.setMessage('');
+			
 			if (e.key === 'ArrowDown') {
 				this.itemPosition++;
 			} else if (e.key === 'ArrowUp') {
