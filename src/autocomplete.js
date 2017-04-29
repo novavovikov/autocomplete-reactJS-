@@ -19,7 +19,6 @@ import Message from './components/message';
 
 import './autocomplete.css';
 
-
 class AutoComplete extends Component {
 	constructor(props) {
 	  super(props);
