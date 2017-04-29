@@ -44,7 +44,7 @@ class AutoComplete extends Component {
 			this.props.setMessage('Не найдено');
 		} else {
 			this.props.setMessage('');
-			
+
 			if (e.key === 'ArrowDown') {
 				this.itemPosition++;
 			} else if (e.key === 'ArrowUp') {
@@ -70,9 +70,9 @@ class AutoComplete extends Component {
 		if (this.props.findItems.length > 0 && this.props.showList) {
 			this.props.onSelectItem(this.props.findItems[0].Id);
 			this.props.onFindText(this.props.findItems[0].City);
-		} else {
-			this.props.setMessage('')
-			this.props.setNotice('Выберите значание из списка')
+		} else if (this.props.findText !== this.props.list[this.props.selectItem].City) {
+			this.props.setMessage('');
+			this.props.setNotice('Выберите значание из списка');
 		}
 
 		this.props.onToggleList(false);
