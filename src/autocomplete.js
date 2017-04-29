@@ -13,13 +13,9 @@ import { setPositionItem } from './actions/setPositionItem';
 
 import { findItemsHandle } from './selectors/selectors';
 
-import Input from './components/input';
-import List from './components/list';
-import Notice from './components/notice';
-import Message from './components/message';
+import Wrap from './components';
 
 import './autocomplete.css';
-
 
 //
 const AutoComplete = ({list, findItems, showList, findText, selectItem, itemPosition, onGetList, onToggleList, onFindText, onFindList, onSelectItem, showLoader, setPositionItem, message, setMessage, notice, setNotice}) => {
@@ -68,9 +64,9 @@ const AutoComplete = ({list, findItems, showList, findText, selectItem, itemPosi
 		} else if (e.key === 'Escape') {
 			onToggleList(false);
 		} else if (e.key === 'Enter' && findItems.length > 0) {
-				onSelectItem(findItems[itemPosition].Id);
-				onFindText(findItems[itemPosition].City);
-				onToggleList(false);
+			onSelectItem(findItems[itemPosition].Id);
+			onFindText(findItems[itemPosition].City);
+			onToggleList(false);
 		}
 
 		if (newItemPosition < 0) {
@@ -89,42 +85,23 @@ const AutoComplete = ({list, findItems, showList, findText, selectItem, itemPosi
 	}
 
 	return (
-			<div 
-				className={(showLoader) ? 'autocomplete' : 'autocomplete'}
-			>
-
-				{(showLoader) ? (
-					<div className="autocomplete__loader" />
-				) : ''}
-
-				<Input 
-					findText={findText}
-					changeInput={changeInput}
-					keyUpHandle={keyUpHandle}
-					blurHandle={blurHandle}
-					keyDownHandle={keyDownHandle}
-					setNotice={setNotice} 
-				/>
-
-				{(message !== '') ? (
-					<Message message={message} />
-				) : ''}
-
-				{(notice !== '') ? (
-					<Notice notice={notice} />
-				) : ''}
-
-				{(findItems.length !== 0) ? (
-					<List 
-						findItems={findItems}
-						showList={showList}
-						selectItem={selectItem}
-						onSelectItem={onSelectItem}
-						onFindText={onFindText}
-						onToggleList={onToggleList}
-					/>
-				) : ''}
-			</div>
+		<Wrap 
+			showLoader={showLoader}
+			findText={findText}
+			changeInput={changeInput}
+			keyUpHandle={keyUpHandle}
+			blurHandle={blurHandle}
+			keyDownHandle={keyDownHandle}
+			setNotice={setNotice}
+			message={message}
+			notice={notice}
+			findItems={findItems}
+			showList={showList}
+			selectItem={selectItem}
+			onSelectItem={onSelectItem}
+			onFindText={onFindText}
+			onToggleList={onToggleList}
+		/>
 	)
 }
 
